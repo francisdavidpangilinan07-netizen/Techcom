@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Writing 50-Item Quiz</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --border: #e2e8f0;
+            --correct: #16a34a;
+            --incorrect: #dc2626;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            margin-bottom: 8px;
+            color: #1e293b;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-card {
+            margin-bottom: 24px;
+        }
+
+        .question-number {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin: 8px 0 20px 0;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: #ffffff;
+            border: 2px solid var(--border);
+            padding: 14px 18px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .option-btn.selected-correct {
+            background: #dcfce7;
+            border-color: var(--correct);
+            color: #14532d;
+            font-weight: 600;
+        }
+
+        .option-btn.selected-incorrect {
+            background: #fee2e2;
+            border-color: var(--incorrect);
+            color: #7f1d1d;
+        }
+
+        .option-btn.show-correct {
+            border-color: var(--correct);
+            background: #f0fdf4;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            display: none;
+            font-size: 0.95rem;
+        }
+
+        .feedback.active {
+            display: block;
+        }
+
+        .feedback.correct-bg {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+        }
+
+        .feedback.incorrect-bg {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+
+        .controls {
+            margin-top: 28px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .results {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 16px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="quiz-screen">
+        <h1>Technical Writing Mastery Quiz</h1>
+        <p class="subtitle">ENGL 012 — Principles, 7Cs, and Expository Techniques</p>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-number" id="q-number">Question 1 of 50</div>
+            <div class="question-text" id="q-text">Loading question...</div>
+            <div class="options" id="options-container"></div>
+            <div class="feedback" id="feedback-box"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>Next Question</button>
+        </div>
+    </div>
+
+    <div class="results" id="results-screen">
+        <h1>Quiz Completed!</h1>
+        <p class="subtitle">Here is your final performance summary:</p>
+        <div class="score-display" id="final-score">0 / 50</div>
+        <p id="score-comment" style="font-size: 1.1rem; margin-bottom: 24px;"></p>
+        <button class="btn" onclick="restartQuiz()">Retake Quiz</button>
+    </div>
+</div>
+
+<script>
+const quizData = [
+    {
+        q: "What is the primary purpose of technical writing?",
+        options: ["To express personal feelings and entertain readers", "To provide vital information and clear instructions", "To stimulate imagination through figurative language", "To convey abstract thoughts and subjective experiences"],
+        answer: 1,
+        explain: "Technical writing focuses on providing vital information and clear instructions for practical action."
+    },
+    {
+        q: "Which best describes the language used in literary/expressive writing compared to technical writing?",
+        options: ["Objective, formal, and scientific", "Concrete, concise, and structured", "Expressive, figurative, and emotional", "Impartial, serious, and direct"],
+        answer: 2,
+        explain: "Literary writing uses expressive, figurative, and emotional language to evoke feelings."
+    },
+    {
+        q: "In terms of tone, technical writing is expected to be:",
+        options: ["Subjective, personal, and sentimental", "Fanciful, light, and interpretative", "Objective, impersonal, and dignified", "Artificial, emotional, and abstract"],
+        answer: 2,
+        explain: "Technical tone remains objective, impersonal, and dignified."
+    },
+    {
+        q: "According to the engineering perspective, technical writing focuses on:",
+        options: ["Storytelling about machinery", "Developing marketing storylines", "Communicating technical information, specifications, and procedures clearly", "Expressing personal opinions on tech progress"],
+        answer: 2,
+        explain: "Engineering technical writing demands clear, concise communication of procedures, specs, and designs."
+    },
+    {
+        q: "Which document type is an example of technical writing?",
+        options: ["A poetry collection", "A user guide or assembly manual", "A fictional short story", "A personal journal entry"],
+        answer: 1,
+        explain: "User guides and assembly manuals are classic technical writing deliverables."
+    },
+    {
+        q: "Technical writing serves as a bridge between:",
+        options: ["Novelists and critics", "Subject matter experts and users", "Graphic artists and printing presses", "Historical researchers and biographers"],
+        answer: 1,
+        explain: "It translates complex subject matter expert knowledge into clear insights for end-users."
+    },
+    {
+        q: "Which of the following is NOT a primary goal or benefit of technical writing?",
+        options: ["Enhancing problem-solving and troubleshooting", "Establishing standardization and consistency", "Inviting multiple subjective interpretations of a procedure", "Facilitating smooth knowledge transfer"],
+        answer: 2,
+        explain: "Technical documentation aims to eliminate multiple interpretations by being precise and direct."
+    },
+    {
+        q: "How does clear technical documentation build professional credibility?",
+        options: ["By using complex words to impress readers", "By demonstrating expertise, attention to detail, and quality", "By including dramatic narrative elements", "By incorporating personal opinions"],
+        answer: 1,
+        explain: "Accuracy, clarity, and thoroughness demonstrate high professional expertise."
+    },
+    {
+        q: "How should technical writers handle specialized jargon?",
+        options: ["Include as much as possible to sound authoritative", "Avoid or minimize it unless necessary for the specific audience", "Combine jargon with clichés and runabout phrases", "Replace precise terms with abstract words"],
+        answer: 1,
+        explain: "Jargon should only be used when necessary for a audience familiar with the terms."
+    },
+    {
+        q: "What does 'audience awareness' mean in technical communication?",
+        options: ["Writing exclusively for university professors", "Tailoring content and style to match reader needs and background", "Ensuring the public understands deep technical nuances", "Using a standard generic style for everyone"],
+        answer: 1,
+        explain: "Audience awareness requires tailoring detail, tone, and vocabulary to the targeted reader."
+    },
+    {
+        q: "Presenting facts, data, and evidence without personal bias refers to which principle?",
+        options: ["Subjectivity", "Objectivity", "Artistry", "Sentimentality"],
+        answer: 1,
+        explain: "Objectivity keeps writing factual, unbiased, and evidence-driven."
+    },
+    {
+        q: "Replacing 'at this point in time' with 'now' or 'currently' improves:",
+        options: ["Conciseness", "Completeness", "Courtesy", "Analogy"],
+        answer: 0,
+        explain: "Conciseness removes wordy runabout phrases in favor of direct terms."
+    },
+    {
+        q: "Replacing 'due to the fact that' with 'because' directly applies which principle?",
+        options: ["Correctness", "Conciseness", "Coherence", "Subjectivity"],
+        answer: 1,
+        explain: "'Because' replaces wordy filler expressions efficiently."
+    },
+    {
+        q: "Why are visual aids such as diagrams, charts, and tables used in technical text?",
+        options: ["To make documents artistic", "To complement text and illustrate complex information visually", "To replace text completely", "To satisfy page length targets"],
+        answer: 1,
+        explain: "Visuals enhance comprehension of dense or complex numerical/spatial data."
+    },
+    {
+        q: "What is the purpose of adhering to established industry standards in documentation?",
+        options: ["To allow creative variation", "To ensure consistency, accuracy, and interoperability", "To lengthen the drafting process", "To hide errors from clients"],
+        answer: 1,
+        explain: "Standards ensure compliance, safety, and consistent interpretation across organizations."
+    },
+    {
+        q: "What is the fundamental goal of the '7Cs of Technical Writing'?",
+        options: ["To entertain readers", "To ensure effective communication in technical contexts", "To lengthen user manuals", "To produce decorative prose"],
+        answer: 1,
+        explain: "The 7Cs form the foundation for reliable, clear, and effective technical interaction."
+    },
+    {
+        q: "Which strategy directly helps achieve Clarity?",
+        options: ["Using passive voice exclusively", "Combining multiple unrelated thoughts into long sentences", "Limiting one idea per sentence and using active voice", "Adding runabout phrases"],
+        answer: 2,
+        explain: "Single-idea active sentences reduce cognitive load and ambiguity."
+    },
+    {
+        q: "Identify the clearest sentence among the choices:",
+        options: [
+            "The software was reviewed by the team after errors occurred which caused crashes.",
+            "Errors caused crashes, so after that, the software got reviewed by us.",
+            "The team reviewed the software after it crashed.",
+            "Having crashed repeatedly due to internal errors, a complete review was initiated."
+        ],
+        answer: 2,
+        explain: "Active voice, straightforward structure, and precise subject-verb relationships yield maximum clarity."
+    },
+    {
+        q: "To achieve Conciseness, a technical writer should:",
+        options: ["Include filler words for formal tone", "Eliminate redundant phrases and use strong verbs", "Omit essential safety facts", "Use wordy expressions"],
+        answer: 1,
+        explain: "Conciseness removes word redundancy without cutting essential context or safety information."
+    },
+    {
+        q: "Which provides the most concise version of 'It is necessary for the technician to inspect the cables'?",
+        options: ["Inspection of cables is necessary for technicians.", "The technician must inspect the cables.", "For safety, cable checking is needed by technicians.", "The technician should execute cable inspection."],
+        answer: 1,
+        explain: "'The technician must inspect the cables' uses direct active phrasing with zero word filler."
+    },
+    {
+        q: "What does the principle of Correctness entail?",
+        options: ["Adhering to proper grammar, factual accuracy, and appropriate tone", "Ensuring paragraphs contain exactly 50 words", "Expressing emotional opinions accurately", "Adding artistic metaphors"],
+        answer: 0,
+        explain: "Correctness covers mechanical grammar, factual precision, and situational appropriateness."
+    },
+    {
+        q: "Which sentence exhibits proper Correctness?",
+        options: [
+            "The technician install the software patch yesterday.",
+            "The engineers checked the equipment and verified the issue.",
+            "The team don't see any problem in the code.",
+            "System logs shows multiple critical errors."
+        ],
+        answer: 1,
+        explain: "Proper subject-verb agreement and past tense alignment: 'engineers checked... and verified'."
+    },
+    {
+        q: "Providing exact numbers, concrete data, and verifiable evidence satisfies which C?",
+        options: ["Courtesy", "Concreteness", "Coherence", "Consideration"],
+        answer: 1,
+        explain: "Concreteness replaces vague generalities with explicit metrics and data."
+    },
+    {
+        q: "Which revision of 'The new processor is much faster' best exemplifies Concreteness?",
+        options: ["The new processor works very well.", "The new processor reduces task execution time by 35%.", "Users feel that the new processor is quicker.", "The processor operates at high speed."],
+        answer: 1,
+        explain: "Measuring performance via 'reduces task execution time by 35%' provides concrete proof."
+    },
+    {
+        q: "A technical document is Coherent when:",
+        options: ["It uses complex jargon in every paragraph", "Ideas are organized logically with clear transitions connecting them", "It includes emotional stories", "Every sentence is passive"],
+        answer: 1,
+        explain: "Logical structure paired with transition markers builds document coherence."
+    },
+    {
+        q: "Using numbered procedural steps (Step 1, Step 2, Step 3) directly enhances:",
+        options: ["Coherence and readability", "Emotional appeal", "Figurative meaning", "Subjectivity"],
+        answer: 0,
+        explain: "Sequential numbering guides the reader logically through procedural execution."
+    },
+    {
+        q: "Which demonstrates Courtesy in professional communication?",
+        options: ["'You failed to follow the instructions.'", "'Your input data is completely wrong.'", "'The entry appears inconsistent; please review and verify the input.'", "'Never forget to save your work.'"],
+        answer: 2,
+        explain: "Courtesy focuses tactfully on solution-oriented feedback rather than accusing the reader."
+    },
+    {
+        q: "What is the core characteristic of Completeness?",
+        options: ["Writing as many pages as possible", "Providing all necessary information, anticipating questions, and including clear action", "Using abstract terms", "Having every team member write a section"],
+        answer: 1,
+        explain: "Completeness delivers all necessary details required for immediate understanding and action."
+    },
+    {
+        q: "Which statement is the most Complete update?",
+        options: [
+            "The server went down last night.",
+            "Server maintenance happened recently.",
+            "The server experienced downtime from 10:00 PM to 2:00 AM due to a reboot; services are fully restored.",
+            "We suggest fixing the server soon."
+        ],
+        answer: 2,
+        explain: "It outlines exact timeframe, root cause, and current operational status."
+    },
+    {
+        q: "What is the primary purpose of Expository Techniques?",
+        options: ["To create dramatic tension", "To explain, classify, and clarify what a thing is, how it functions, and how parts relate", "To persuade readers on political topics", "To write creative poetry"],
+        answer: 1,
+        explain: "Expository techniques serve as the structural backbone to explain mechanisms, processes, and systems."
+    },
+    {
+        q: "Which expository technique directly answers 'What is it?'?",
+        options: ["Process Description", "Classification", "Definition", "Analogy"],
+        answer: 2,
+        explain: "Definition clarifies the exact boundaries and identity of a concept or object."
+    },
+    {
+        q: "A definition based on operational boundaries, algorithm execution, and technical behavior is an:",
+        options: ["Operational definition", "Artistic definition", "Abstract definition", "Intuitive definition"],
+        answer: 0,
+        explain: "Operational definitions describe how something functions or operates within a working environment."
+    },
+    {
+        q: "Which technique is used when step-by-step instructions or flowcharts explain task execution?",
+        options: ["Mechanism Description", "Process Description", "Classification", "Analogy"],
+        answer: 1,
+        explain: "Process descriptions detail continuous actions, procedures, or chronological workflows."
+    },
+    {
+        q: "Explaining physical components (e.g., platter, head, actuator arm of an HDD) utilizes:",
+        options: ["Process Description", "Mechanism Description", "Cause and Effect", "Analogy"],
+        answer: 1,
+        explain: "Mechanism descriptions break down physical equipment into sub-assemblies and parts."
+    },
+    {
+        q: "Grouping items based on shared structural attributes answers which question?",
+        options: ["'How much does it cost?'", "'What kind / type / class?'", "'Why did it fail?'", "'Who built it?'"],
+        answer: 1,
+        explain: "Classification sorts topics logically into categories and types."
+    },
+    {
+        q: "Classifying bridges into Beam, Arch, Suspension, and Cable-stayed uses which technique?",
+        options: ["Definition", "Classification", "Cause and Effect", "Analogy"],
+        answer: 1,
+        explain: "It categorizes structural variations based on engineering design."
+    },
+    {
+        q: "Comparing SSDs and HDDs on speed, reliability, and cost utilizes:",
+        options: ["Process Description", "Comparison and Contrast", "Operational Definition", "Mechanism Description"],
+        answer: 1,
+        explain: "Comparison and contrast evaluates similarities and key differentiating attributes."
+    },
+    {
+        q: "Analyzing two technologies feature-by-feature across a matrix table uses which comparison pattern?",
+        options: ["Sequential pattern", "Alternating / Table pattern", "Random pattern", "Subjective pattern"],
+        answer: 1,
+        explain: "The alternating or point-by-point table pattern directly aligns features side-by-side."
+    },
+    {
+        q: "Explaining that 'excessive voltage spikes damage transformer windings and cause outages' uses:",
+        options: ["Analogy", "Cause and Effect", "Classification", "Mechanism Description"],
+        answer: 1,
+        explain: "Cause and effect establishes logical links between root actions/triggers and final outcomes."
+    },
+    {
+        q: "Comparing computer RAM management to cataloging books in a library is an example of an:",
+        options: ["Analogy", "Operational Definition", "Executive Summary", "Incident Report"],
+        answer: 0,
+        explain: "Analogies compare an unfamiliar complex system to a widely understood familiar concept."
+    },
+    {
+        q: "Why is an Analogy effective in technical writing?",
+        options: ["It provides legal immunity", "It makes an unfamiliar or complex concept familiar and easy to grasp", "It adds emotional depth", "It eliminates factual requirements"],
+        answer: 1,
+        explain: "It leverages common knowledge to anchor complex specialized concepts."
+    },
+    {
+        q: "Incorporating bar graphs and line charts to display metrics utilizes:",
+        options: ["Classification", "Illustration", "Analogy", "Operational Definition"],
+        answer: 1,
+        explain: "Illustration uses visual assets like graphs, diagrams, and figures to convey data."
+    },
+    {
+        q: "Which phrase represents wordiness that should be simplified in technical reports?",
+        options: ["'To'", "'Because'", "'For the purpose of'", "'Fewer'"],
+        answer: 2,
+        explain: "'For the purpose of' can always be trimmed down to 'to' or 'for'."
+    },
+    {
+        q: "What is the concise equivalent of 'give indication of'?",
+        options: ["'Show' or 'indicate'", "'Pertaining to'", "'In spite of'", "'Make an illustration'"],
+        answer: 0,
+        explain: "'Show' or 'indicate' replaces the nominalized verb expression efficiently."
+    },
+    {
+        q: "Which is a characteristic of Literary/Expressive Writing rather than Technical Writing?",
+        options: ["Focuses on business and tech", "Centers on human experiences, feelings, and emotions", "Uses precise standard formats", "Delivers direct single-meaning interpretations"],
+        answer: 1,
+        explain: "Expressive writing centers around personal emotions, subjective reflections, and artistic narrative."
+    },
+    {
+        q: "A document proposing adoption of a new network architecture is a:",
+        options: ["Technical proposal / White paper", "Expressive narrative", "Literary essay", "Descriptive poem"],
+        answer: 0,
+        explain: "Technical proposals present rationale and specifications for business/engineering adoption."
+    },
+    {
+        q: "What risk arises from inaccuracies in technical documentation?",
+        options: ["Improved reader imagination", "Increased artistic merit", "Serious operational failures, safety hazards, or legal consequences", "Higher document readability"],
+        answer: 2,
+        explain: "Errors in technical manuals can trigger physical damage, injury, system downtime, or liability."
+    },
+    {
+        q: "Breaking long run-on sentences into distinct active single-thought statements improves:",
+        options: ["Clarity and Coherence", "Sentimentality", "Ambiguity", "Subjectivity"],
+        answer: 0,
+        explain: "Single-thought sentences improve flow (coherence) and ease of understanding (clarity)."
+    },
+    {
+        q: "'DNA replication is like copying a recipe book line by line.' This statement is an:",
+        options: ["Analogy", "Classification", "Cause and Effect", "Mechanism Description"],
+        answer: 0,
+        explain: "It compares a biological system to a everyday recipe book."
+    },
+    {
+        q: "Which element ensures technical instructions can be performed correctly without supervision?",
+        options: ["Broad general statements", "Clear, precise, step-by-step procedural description", "Abstract metaphors", "Emotional vocabulary"],
+        answer: 1,
+        explain: "Step-by-step procedural description ensures exact execution and repeatability."
+    }
+];
+
+let currentQ = 0;
+let score = 0;
+let answered = false;
+
+function loadQuestion() {
+    answered = false;
+    const item = quizData[currentQ];
+    
+    document.getElementById("q-number").innerText = `Question ${currentQ + 1} of${quizData.length}`;
+    document.getElementById("q-text").innerText = item.q;
+    document.getElementById("progress").style.width = `${((currentQ + 1) / quizData.length) * 100}%`;
+    
+    const container = document.getElementById("options-container");
+    container.innerHTML = "";
+    
+    const feedbackBox = document.getElementById("feedback-box");
+    feedbackBox.className = "feedback";
+    feedbackBox.innerText = "";
+    
+    document.getElementById("next-btn").disabled = true;
+
+    item.options.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerText = `${String.fromCharCode(65 + idx)}.${opt}`;
+        btn.onclick = () => selectOption(idx);
+        container.appendChild(btn);
+    });
+}
+
+function selectOption(index) {
+    if (answered) return;
+    answered = true;
+
+    const item = quizData[currentQ];
+    const buttons = document.querySelectorAll(".option-btn");
+    const feedbackBox = document.getElementById("feedback-box");
+
+    buttons.forEach(b => b.disabled = true);
+
+    if (index === item.answer) {
+        score++;
+        buttons[index].classList.add("selected-correct");
+        feedbackBox.classList.add("active", "correct-bg");
+        feedbackBox.innerText = `Correct! ${item.explain}`;
+    } else {
+        buttons[index].classList.add("selected-incorrect");
+        buttons[item.answer].classList.add("show-correct");
+        feedbackBox.classList.add("active", "incorrect-bg");
+        feedbackBox.innerText = `Incorrect. ${item.explain}`;
+    }
+
+    document.getElementById("next-btn").disabled = false;
+}
+
+function nextQuestion() {
+    currentQ++;
+    if (currentQ < quizData.length) {
+        loadQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    document.getElementById("quiz-screen").style.display = "none";
+    document.getElementById("results-screen").style.display = "block";
+    document.getElementById("final-score").innerText = `${score} /${quizData.length}`;
+
+    const percentage = (score / quizData.length) * 100;
+    let comment = "";
+    if (percentage >= 90) comment = "Outstanding performance! You have mastered these principles.";
+    else if (percentage >= 75) comment = "Great job! Solid understanding of the 7Cs and expository methods.";
+    else comment = "Good effort! Consider reviewing the course slides to polish key concepts.";
+    
+    document.getElementById("score-comment").innerText = comment;
+}
+
+function restartQuiz() {
+    currentQ = 0;
+    score = 0;
+    document.getElementById("results-screen").style.display = "none";
+    document.getElementById("quiz-screen").style.display = "block";
+    loadQuestion();
+}
+
+window.onload = loadQuestion;
+</script>
+
+</body>
+</html>
