@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Communication 50-Item Quiz</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --border: #e2e8f0;
+            --correct: #16a34a;
+            --incorrect: #dc2626;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            margin-bottom: 8px;
+            color: #1e293b;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-card {
+            margin-bottom: 24px;
+        }
+
+        .question-number {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin: 8px 0 20px 0;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: #ffffff;
+            border: 2px solid var(--border);
+            padding: 14px 18px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .option-btn.selected-correct {
+            background: #dcfce7;
+            border-color: var(--correct);
+            color: #14532d;
+            font-weight: 600;
+        }
+
+        .option-btn.selected-incorrect {
+            background: #fee2e2;
+            border-color: var(--incorrect);
+            color: #7f1d1d;
+        }
+
+        .option-btn.show-correct {
+            border-color: var(--correct);
+            background: #f0fdf4;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            display: none;
+            font-size: 0.95rem;
+        }
+
+        .feedback.active {
+            display: block;
+        }
+
+        .feedback.correct-bg {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+        }
+
+        .feedback.incorrect-bg {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+
+        .controls {
+            margin-top: 28px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .results {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 16px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="quiz-screen">
+        <h1>Business Communication Mastery Quiz</h1>
+        <p class="subtitle">ENGL 012 — Business Letters, Stakeholder Analysis, & Strategy</p>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-number" id="q-number">Question 1 of 50</div>
+            <div class="question-text" id="q-text">Loading question...</div>
+            <div class="options" id="options-container"></div>
+            <div class="feedback" id="feedback-box"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>Next Question</button>
+        </div>
+    </div>
+
+    <div class="results" id="results-screen">
+        <h1>Quiz Completed!</h1>
+        <p class="subtitle">Here is your final performance summary:</p>
+        <div class="score-display" id="final-score">0 / 50</div>
+        <p id="score-comment" style="font-size: 1.1rem; margin-bottom: 24px;"></p>
+        <button class="btn" onclick="restartQuiz()">Retake Quiz</button>
+    </div>
+</div>
+
+<script>
+const quizData = [
+    {
+        q: "Which of the following best defines business communication?",
+        options: [
+            "Communication intended for personal entertainment and artistic expression",
+            "Communication meant for the workplace that aims to influence actions or opinions",
+            "Informal casual dialogue between friends outside a professional setting",
+            "Literary writing designed to elicit emotional responses from general readers"
+        ],
+        answer: 1,
+        explain: "Business communication is intentional workplace communication designed to influence actions or decisions."
+    },
+    {
+        q: "In technical initiatives, a 'stakeholder' is defined as:",
+        options: [
+            "Any outside competitor attempting to acquire company assets",
+            "Any individual, group, or system affected by, or capable of affecting, the initiative's outcome",
+            "Only the executive members who hold financial shares in the company",
+            "The primary software developer writing code for the project"
+        ],
+        answer: 1,
+        explain: "A stakeholder is anyone or any system affected by or capable of influencing project outcomes."
+    },
+    {
+        q: "Which letter style aligns all structural components—including dateline, closing, and signature—strictly to the left margin?",
+        options: ["Modified block style", "Semi-block style", "Full block style", "Simplified indented style"],
+        answer: 2,
+        explain: "Full block style aligns all elements along the left margin without indentation."
+    },
+    {
+        q: "How does a semi-block (or simplified) business letter style differ from a modified block style?",
+        options: [
+            "The dateline is moved to the left margin",
+            "The first line of each paragraph is indented",
+            "The complimentary close is omitted entirely",
+            "All text is right-justified across the document"
+        ],
+        answer: 1,
+        explain: "Semi-block style retains modified block positioning but indents the first line of each paragraph."
+    },
+    {
+        q: "In a modified block business letter, which elements are placed on the right side of the page?",
+        options: [
+            "Inside address and attention line",
+            "Dateline, complimentary close, and signature",
+            "Subject line and body paragraphs",
+            "Enclosure notations and footers"
+        ],
+        answer: 1,
+        explain: "Modified block places the dateline, complimentary close, and signature block towards the right margin."
+    },
+    {
+        q: "Which major part of a business letter contains the printed name, address, logo, and contact details of the sending organization?",
+        options: ["Return Heading", "Inside Address", "Letterhead", "Reference Line"],
+        answer: 2,
+        explain: "The letterhead displays the organization's official branding and contact information at the top."
+    },
+    {
+        q: "What is the correct formal dateline format in business correspondence?",
+        options: ["April 30, 2025", "30 April 2025", "04/30/2025", "Apr. 30th '25"],
+        answer: 0,
+        explain: "'April 30, 2025' represents the standard formal dateline structure."
+    },
+    {
+        q: "The address of the recipient as written in a formal business letter is called the:",
+        options: ["Return Heading", "Letterhead", "Inside Address", "Reference Line"],
+        answer: 2,
+        explain: "The Inside Address contains the complete name, title, company, and address of the recipient."
+    },
+    {
+        q: "Which salutation is categorized as Most Formal?",
+        options: ["Dear: [NAME]", "Honorifics: [NAME]", "Dear Honorifics [NAME]", "My dear [NAME]"],
+        answer: 1,
+        explain: "'Honorifics: [NAME]' (e.g., 'Sir:') is used in the most formal correspondence."
+    },
+    {
+        q: "Which complimentary close is classified as Most Formal?",
+        options: ["Very truly yours,", "Yours sincerely,", "Respectfully yours,", "Cordially yours,"],
+        answer: 2,
+        explain: "'Respectfully yours' or 'Yours respectfully' indicates the highest level of formal sign-off."
+    },
+    {
+        q: "'Very truly yours,' and 'Yours very truly,' belong to which category of complimentary closes?",
+        options: ["Most Formal", "Formal", "Less Formal", "Friendly or Intimate"],
+        answer: 1,
+        explain: "'Very truly yours' is categorized as standard Formal sign-off."
+    },
+    {
+        q: "How many blank lines/spaces are standard between the complimentary close and the typewritten signature?",
+        options: ["One space", "Two spaces", "Four spaces", "Double-spaced after the document"],
+        answer: 1,
+        explain: "Leaving two lines/spaces leaves physical room for the pen-written signature."
+    },
+    {
+        q: "The three essential components of the signature block in a business letter are:",
+        options: [
+            "Return address, date, and inside address",
+            "Pen-written signature, typewritten signature, and designation/title",
+            "Subject line, reference code, and company logo",
+            "Salutation, body, and enclosure notation"
+        ],
+        answer: 1,
+        explain: "The full signature block requires a pen-written signature, typed name, and professional title."
+    },
+    {
+        q: "What is the purpose of an Attention Line in a business letter?",
+        options: [
+            "To summarize the main point of the letter before the body",
+            "To direct the letter to a specific individual or officer within an organization",
+            "To list attached files or documents",
+            "To indicate who typed the document"
+        ],
+        answer: 1,
+        explain: "An Attention Line routes the letter directly to a specific person inside a company."
+    },
+    {
+        q: "A minor part of a business letter used to give advance notice of the letter's main topic is the:",
+        options: ["Reference Line", "Subject Line", "Postscript", "Attention Line"],
+        answer: 1,
+        explain: "The Subject Line gives immediate notice of the document's core topic."
+    },
+    {
+        q: "Example phrases such as 'In replying, please refer to File C-777' or 'Our File No. F-4' represent a:",
+        options: ["Subject Line", "Reference Line", "Foot Notation", "Attention Line"],
+        answer: 1,
+        explain: "Reference lines index filings so administrative staff can locate previous correspondence easily."
+    },
+    {
+        q: "In foot notations, what does the abbreviation BCC stand for?",
+        options: ["Basic Carbon Copy", "Business Communication Copy", "Blind Carbon Copy", "Board Certified Copy"],
+        answer: 2,
+        explain: "Blind Carbon Copy sends a copy to a recipient without revealing their address to others."
+    },
+    {
+        q: "Where is the company signature placed if it is included in a business letter?",
+        options: [
+            "Above the inside address",
+            "Two spaces below the complimentary close",
+            "At the top left of the letterhead",
+            "Immediately following the subject line"
+        ],
+        answer: 1,
+        explain: "The company name is typed two spaces below the complimentary close when representing the firm legally."
+    },
+    {
+        q: "What minor part is used to add an extra message after the signature block has been completed?",
+        options: ["Enclosure", "Postscript (P.S.)", "Reference Line", "Copy Furnished (CF)"],
+        answer: 1,
+        explain: "Postscript (P.S.) adds a secondary thought or emphasis below the signature."
+    },
+    {
+        q: "Which type of everyday business letter is written to seek details or facts about a product, service, or policy?",
+        options: ["Adjustment Letter", "Inquiry Letter", "Claim Letter", "Acknowledgement Letter"],
+        answer: 1,
+        explain: "An Inquiry Letter asks for specific operational, commercial, or policy details."
+    },
+    {
+        q: "A letter written to confirm that a message, document, or package has been received is called an:",
+        options: ["Order Letter", "Acknowledgement Letter / Letter of Receipt", "Inquiry Letter", "Adjustment Letter"],
+        answer: 1,
+        explain: "Acknowledgement letters formally verify receipt of items or correspondence."
+    },
+    {
+        q: "Which letter type alerts responsible parties about a transaction error, defect, or service problem?",
+        options: ["Adjustment Letter", "Claim Letter", "Response Letter", "Application Letter"],
+        answer: 1,
+        explain: "A Claim Letter notifies a vendor or partner of an error, loss, or defect."
+    },
+    {
+        q: "An Adjustment Letter is written to:",
+        options: [
+            "Order goods or equipment from a vendor",
+            "Respond to and resolve customer complaints or claim letters",
+            "Formally resign from an existing job position",
+            "Provide candidate recommendations to hiring managers"
+        ],
+        answer: 1,
+        explain: "Adjustment letters deliver solutions, remedies, or decisions regarding customer claims."
+    },
+    {
+        q: "An application letter submitted for a job opening that was not formally advertised is classified as:",
+        options: ["Solicited", "Unsolicited", "Endorsed", "Inquiry-based"],
+        answer: 1,
+        explain: "Unsolicited job letters are sent proactively without a public job posting."
+    },
+    {
+        q: "According to professional guides, what should be included in the opening paragraph of an application letter?",
+        options: [
+            "A detailed summary of salary expectations",
+            "The target position, source of job posting, or referring person",
+            "A complete list of all attended seminars",
+            "A list of personal character references"
+        ],
+        answer: 1,
+        explain: "The opening paragraph must identify the desired role and how the applicant learned of it."
+    },
+    {
+        q: "What is the primary purpose of the body in an application letter?",
+        options: [
+            "Request an immediate salary quote",
+            "Detail qualifications, educational background, work roles, and key selling points",
+            "Ask for company financial reports",
+            "Provide a list of personal hobbies"
+        ],
+        answer: 1,
+        explain: "The body aligns candidate experience, education, and achievements with job requirements."
+    },
+    {
+        q: "The closing of an application letter should specifically include:",
+        options: [
+            "A list of former supervisors",
+            "A call to action, request for an interview, and contact details",
+            "Transcript of records",
+            "A summary of company background"
+        ],
+        answer: 1,
+        explain: "The closing drives action by requesting an interview and providing direct contact details."
+    },
+    {
+        q: "What is the standard length of a traditional professional Resume?",
+        options: ["1 to 2 pages", "4 to 6 pages", "Exactly half a page", "Unlimited length depending on years of experience"],
+        answer: 0,
+        explain: "Resumes are concise career summaries typically kept to 1–2 pages."
+    },
+    {
+        q: "Which document provides an exhaustive, multi-page record of a person's entire academic, research, and professional career?",
+        options: ["Cover Letter", "Resume", "Curriculum Vitae (CV)", "Job Order"],
+        answer: 2,
+        explain: "A Curriculum Vitae (CV) is a comprehensive multi-page historical profile."
+    },
+    {
+        q: "Which section is typically featured in a CV rather than a standard 1-page Resume?",
+        options: [
+            "Work experience",
+            "Contact information",
+            "Publications, research experience, and academic presentations",
+            "Basic skills summary"
+        ],
+        answer: 2,
+        explain: "CVs include specialized academic sections such as publications, research, and grants."
+    },
+    {
+        q: "Letters of congratulations, condolence, thank you, and invitation fall under which group of business correspondence?",
+        options: ["Everyday letters", "Service letters", "Employment letters", "Additional goodwill letters"],
+        answer: 3,
+        explain: "Goodwill letters foster healthy social and business relationships."
+    },
+    {
+        q: "Which dimension of audience analysis measures a stakeholder's capacity to grant or withhold resources, budgets, and sign-offs?",
+        options: ["Interest", "Power", "Influence", "Attitude"],
+        answer: 1,
+        explain: "Power represents formal decision-making authority over budgets and approvals."
+    },
+    {
+        q: "In audience analysis, Interest reflects:",
+        options: [
+            "The informal leverage a lead has over peer adoption",
+            "How directly the initiative affects a stakeholder's daily workload, operations, or KPIs",
+            "The formal executive authority to approve budgets",
+            "The financial compensation given to project teams"
+        ],
+        answer: 1,
+        explain: "Interest indicates how significantly a project impacts a stakeholder's operational reality."
+    },
+    {
+        q: "A Principal Engineer who lacks direct managerial authority but strongly shapes team technology choices possesses high:",
+        options: ["Power", "Interest", "Influence", "Compliance"],
+        answer: 2,
+        explain: "Influence refers to informal leadership and leverage to shape peer culture and adoption."
+    },
+    {
+        q: "A stakeholder who views an upcoming technical change as a risk, extra effort, or loss of control has an attitude classified as:",
+        options: ["Supportive", "Neutral", "Resistant", "Passive"],
+        answer: 2,
+        explain: "Resistant stakeholders view project changes as threats or unnecessary burdens."
+    },
+    {
+        q: "According to Mendelow's Matrix, how should you engage stakeholders with High Power and High Interest?",
+        options: [
+            "Keep Informed via release notes",
+            "Keep Satisfied via executive summaries",
+            "Manage Closely via frequent 1-on-1s and co-design sessions",
+            "Monitor with minimal effort through central portals"
+        ],
+        answer: 2,
+        explain: "High Power / High Interest key players require active 'Manage Closely' engagement."
+    },
+    {
+        q: "What engagement strategy is recommended for stakeholders with High Power but Low Interest?",
+        options: ["Manage Closely", "Keep Satisfied", "Keep Informed", "Monitor"],
+        answer: 1,
+        explain: "High Power / Low Interest leaders should be kept satisfied with high-level briefs and dashboards."
+    },
+    {
+        q: "Sending release notes, status reports, and open Q&A updates to stakeholders with Low Power and High Interest aligns with:",
+        options: ["Keep Satisfied", "Manage Closely", "Keep Informed", "Minimum Effort"],
+        answer: 2,
+        explain: "Low Power / High Interest groups need regular updates to remain informed and supported."
+    },
+    {
+        q: "Stakeholders categorized in the Low Power / Low Interest quadrant should be handled by:",
+        options: [
+            "Hosting weekly individual co-design meetings",
+            "Monitoring them via central self-service portals",
+            "Sending high-level executive dashboard sign-offs",
+            "Setting up daily emergency status calls"
+        ],
+        answer: 1,
+        explain: "Low Power / Low Interest stakeholders require minimum effort through passive self-service monitoring."
+    },
+    {
+        q: "In Strategic Message Mapping, the KNOW dimension focuses on:",
+        options: [
+            "The psychological feeling of confidence or safety",
+            "The exact, non-negotiable technical facts, details, or specs the reader must retain",
+            "The single call to action the reader must perform",
+            "The emotional bonding between writer and recipient"
+        ],
+        answer: 1,
+        explain: "KNOW defines the core facts and details the recipient must learn."
+    },
+    {
+        q: "The FEEL component in strategic message mapping establishes:",
+        options: [
+            "The physical location of the meeting",
+            "The psychological positioning, such as reassurance or urgency",
+            "The date by which a server patch must be completed",
+            "The formal code syntax required in a pull request"
+        ],
+        answer: 1,
+        explain: "FEEL addresses the emotional state (reassured, confident, alerted) you wish to induce."
+    },
+    {
+        q: "In Strategic Message Mapping, the DO element represents:",
+        options: [
+            "The background history of the technical problem",
+            "The exact single action or step required from the reader",
+            "The list of software dependencies",
+            "The emotional state of the project manager"
+        ],
+        answer: 1,
+        explain: "DO specifies the exact call to action or step required from the audience."
+    },
+    {
+        q: "What is the 'Curse of Knowledge' in technical business communication?",
+        options: [
+            "Forgetting technical terms during a presentation",
+            "Assuming that sharing all technical data will automatically persuade the audience",
+            "Refusing to document system architecture",
+            "Using simple words that make a report appear non-technical"
+        ],
+        answer: 1,
+        explain: "The Curse of Knowledge occurs when experts overwhelm readers with data assuming facts equal persuasion."
+    },
+    {
+        q: "On the Media Richness Spectrum, which channel is considered the most Rich and Personal?",
+        options: ["Rules and Regulations", "Formal Information Systems", "Group Meetings / Direct Contact", "Special Reports"],
+        answer: 2,
+        explain: "Direct contact and group meetings provide immediate visual, verbal, and personal feedback."
+    },
+    {
+        q: "Which channel is ranked lowest on media richness (most impersonal)?",
+        options: ["Group Meetings", "Rules and Regulations", "Direct Contact", "Integrator Discussions"],
+        answer: 1,
+        explain: "Rules and regulations represent static, impersonal, and low-richness communication channels."
+    },
+    {
+        q: "What does 'Information Cascading' refer to in communication sequencing?",
+        options: [
+            "Sending emails to all employees at the exact same second",
+            "Delivering messages in a deliberate sequence based on organizational roles",
+            "Posting updates exclusively on public social media",
+            "Hiding project updates until after launch"
+        ],
+        answer: 1,
+        explain: "Information cascading sequences announcements down managerial and technical tiers systematically."
+    },
+    {
+        q: "What is the standard sequence in an information cascading workflow?",
+        options: [
+            "End-Users -> Tech Team -> Executive Sponsors",
+            "Executive Sponsors -> Technical Implementation Team -> Broader Organization",
+            "Technical Team -> External Clients -> Department Leads",
+            "External Media -> Executive Sponsors -> End-Users"
+        ],
+        answer: 1,
+        explain: "Updates move from Executive Sponsors to the Technical Team, then out to the broader organization."
+    },
+    {
+        q: "What is a Closed-Loop Feedback mechanism in business communication?",
+        options: [
+            "Ending an email with 'Let me know if you have questions.'",
+            "Using explicit, trackable confirmation mechanisms like 'Reply Approved in Jira by Friday.'",
+            "Blocking replies to outgoing broadcast emails",
+            "Turning off comment threads on technical documentation"
+        ],
+        answer: 1,
+        explain: "Closed-loop communication relies on trackable explicit confirmations rather than passive assumptions."
+    },
+    {
+        q: "In a standard 3-Tier Escalation Path for technical projects, Tier 1 represents:",
+        options: ["Executive Steering Committee", "Manager / Architect level", "Peer-to-Peer level", "External Legal Counsel"],
+        answer: 2,
+        explain: "Tier 1 escalation begins at the peer-to-peer level before moving up management chains."
+    },
+    {
+        q: "In a 3-Tier Escalation Path, Tier 3 communication issues are directed to:",
+        options: ["Peer Developers", "Direct Team Supervisors", "Executive Steering Committee", "Third-party Vendors"],
+        answer: 2,
+        explain: "Tier 3 escalations reach the highest governance level: the Executive Steering Committee."
+    }
+];
+
+let currentQ = 0;
+let score = 0;
+let answered = false;
+
+function loadQuestion() {
+    answered = false;
+    const item = quizData[currentQ];
+    
+    document.getElementById("q-number").innerText = `Question ${currentQ + 1} of${quizData.length}`;
+    document.getElementById("q-text").innerText = item.q;
+    document.getElementById("progress").style.width = `${((currentQ + 1) / quizData.length) * 100}%`;
+    
+    const container = document.getElementById("options-container");
+    container.innerHTML = "";
+    
+    const feedbackBox = document.getElementById("feedback-box");
+    feedbackBox.className = "feedback";
+    feedbackBox.innerText = "";
+    
+    document.getElementById("next-btn").disabled = true;
+
+    item.options.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerText = `${String.fromCharCode(65 + idx)}.${opt}`;
+        btn.onclick = () => selectOption(idx);
+        container.appendChild(btn);
+    });
+}
+
+function selectOption(index) {
+    if (answered) return;
+    answered = true;
+
+    const item = quizData[currentQ];
+    const buttons = document.querySelectorAll(".option-btn");
+    const feedbackBox = document.getElementById("feedback-box");
+
+    buttons.forEach(b => b.disabled = true);
+
+    if (index === item.answer) {
+        score++;
+        buttons[index].classList.add("selected-correct");
+        feedbackBox.classList.add("active", "correct-bg");
+        feedbackBox.innerText = `Correct! ${item.explain}`;
+    } else {
+        buttons[index].classList.add("selected-incorrect");
+        buttons[item.answer].classList.add("show-correct");
+        feedbackBox.classList.add("active", "incorrect-bg");
+        feedbackBox.innerText = `Incorrect. ${item.explain}`;
+    }
+
+    document.getElementById("next-btn").disabled = false;
+}
+
+function nextQuestion() {
+    currentQ++;
+    if (currentQ < quizData.length) {
+        loadQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    document.getElementById("quiz-screen").style.display = "none";
+    document.getElementById("results-screen").style.display = "block";
+    document.getElementById("final-score").innerText = `${score} /${quizData.length}`;
+
+    const percentage = (score / quizData.length) * 100;
+    let comment = "";
+    if (percentage >= 90) comment = "Outstanding performance! Excellent command of business communication principles.";
+    else if (percentage >= 75) comment = "Great job! Strong understanding of letter structures and stakeholder strategy.";
+    else comment = "Good effort! Review the business communication slides to refine your key concepts.";
+    
+    document.getElementById("score-comment").innerText = comment;
+}
+
+function restartQuiz() {
+    currentQ = 0;
+    score = 0;
+    document.getElementById("results-screen").style.display = "none";
+    document.getElementById("quiz-screen").style.display = "block";
+    loadQuestion();
+}
+
+window.onload = loadQuestion;
+</script>
+
+</body>
+</html>
