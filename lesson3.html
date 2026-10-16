@@ -189,6 +189,13 @@
 <body>
 
 <div class="container">
+
+    <!-- QUIZ NAVIGATION BAR -->
+    <div style="margin-bottom: 25px; text-align: center;">
+        <a href="index.html" style="padding: 10px 16px; background: #475569; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; margin-right: 10px; display: inline-block;">Lesson 1 & 2 Quiz</a>
+        <a href="lesson3.html" style="padding: 10px 16px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Lesson 3 Quiz</a>
+    </div>
+
     <div id="quiz-screen">
         <h1>Business Communication Mastery Quiz</h1>
         <p class="subtitle">ENGL 012 — Business Letters, Stakeholder Analysis, & Strategy</p>
@@ -640,7 +647,7 @@ function loadQuestion() {
     answered = false;
     const item = quizData[currentQ];
     
-    document.getElementById("q-number").innerText = `Question ${currentQ + 1} of${quizData.length}`;
+    document.getElementById("q-number").innerText = `Question ${currentQ + 1} of ${quizData.length}`;
     document.getElementById("q-text").innerText = item.q;
     document.getElementById("progress").style.width = `${((currentQ + 1) / quizData.length) * 100}%`;
     
@@ -656,7 +663,7 @@ function loadQuestion() {
     item.options.forEach((opt, idx) => {
         const btn = document.createElement("button");
         btn.className = "option-btn";
-        btn.innerText = `${String.fromCharCode(65 + idx)}.${opt}`;
+        btn.innerText = `${String.fromCharCode(65 + idx)}. ${opt}`;
         btn.onclick = () => selectOption(idx);
         container.appendChild(btn);
     });
@@ -699,7 +706,7 @@ function nextQuestion() {
 function showResults() {
     document.getElementById("quiz-screen").style.display = "none";
     document.getElementById("results-screen").style.display = "block";
-    document.getElementById("final-score").innerText = `${score} /${quizData.length}`;
+    document.getElementById("final-score").innerText = `${score} / ${quizData.length}`;
 
     const percentage = (score / quizData.length) * 100;
     let comment = "";
